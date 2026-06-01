@@ -15,8 +15,9 @@ import org.junit.runner.RunWith
 class ExampleInstrumentedTest {
   @Test
   fun useAppContext() {
-    // Context of the app under test.
+    // Context of the app under test. packageName reflects the applicationId,
+    // which differs from the Kotlin namespace (com.example).
     val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-    assertEquals("com.example", appContext.packageName)
+    assertEquals("com.aistudio.quizapp.bvwxy", appContext.packageName)
   }
 }
