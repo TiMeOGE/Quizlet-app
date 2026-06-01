@@ -1118,7 +1118,7 @@
                 <div class="flex align-center gap-1" style="color: var(--primary); cursor: pointer; font-weight:600;" onclick="returnToSet()">
                     ← Quitter les Flashcards
                 </div>
-                <div id="fc-progress-txt" style="font-size: 13px; font-weight: 600;">Card 1 / 1</div>
+                <div id="fc-progress-txt" style="font-size: 13px; font-weight: 600;">Carte 1 / 1</div>
             </div>
 
             <div class="progress-bar-container" style="height: 6px; margin: 10px 0 16px 0;">
@@ -1160,7 +1160,7 @@
             </div>
 
             <!-- Rate controls shown only after flip -->
-            <div id="fc-rate-controls" class="d-none" style="display:-flex; gap: 10px; margin-bottom: 20px;">
+            <div id="fc-rate-controls" class="d-none" style="display:flex; gap: 10px; margin-bottom: 20px;">
                 <button class="btn-theme danger" style="flex:1;" onclick="rateCard(false)">❌ Je ne savais pas</button>
                 <button class="btn-theme success" style="flex:1;" onclick="rateCard(true)">✅ Je savais</button>
             </div>
@@ -1230,7 +1230,7 @@
 
                 <div class="flex gap-1">
                     <button class="btn-theme" style="flex:1;" id="w-submit-btn" onclick="submitWAnswer()">Valider</button>
-                    <button class="btn-theme secondary" style="display-none; flex:1;" id="w-next-btn" onclick="nextWQuestion()">Suivant</button>
+                    <button class="btn-theme secondary d-none" style="flex:1;" id="w-next-btn" onclick="nextWQuestion()">Suivant</button>
                 </div>
 
                 <div id="w-feedback-box" class="d-none">
@@ -1557,9 +1557,12 @@
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
-                    if (!parsed.quizapp_set) {
+                    if (!parsed.quizapp_set || typeof parsed.title !== 'string' || !parsed.title.trim()) {
                         alert("Le fichier sélectionné n'est pas un set QuizApp valide.");
                         return;
+                    }
+                    if (!Array.isArray(parsed.cards)) {
+                        parsed.cards = [];
                     }
 
                     // Check if duplicate title exists
@@ -1582,7 +1585,8 @@
 
                     sets.push(newSet);
                     saveSetsToLocalStorage();
-                    initApp();
+                    renderSetsGrid();
+                    showView('view-home');
                 } catch(err) {
                     alert("Erreur de lecture du fichier JSON: " + err.message);
                 }
@@ -1600,7 +1604,7 @@
                 }
                 saveSetsToLocalStorage();
                 saveProgressToLocalStorage();
-                initApp();
+                renderSetsGrid();
             }
         }
 
@@ -1726,7 +1730,7 @@
                 }
             } else {
                 // Insert new
-                const nextId = 'set_' + Date.now();
+                const nextId = 'set_' + Date.now() + '_' + Math.floor(Math.random()*1000);
                 sets.push({
                     id: nextId,
                     title: title,
@@ -1737,7 +1741,7 @@
             }
 
             saveSetsToLocalStorage();
-            initApp();
+            renderSetsGrid();
             openSetDetail(currentSetId);
         }
 
@@ -1984,7 +1988,7 @@
 
         function updateFlashcard() {
             if (fcCards.length === 0) {
-                alert("Vide");
+                returnToSet();
                 return;
             }
 
@@ -2192,10 +2196,10 @@
             document.getElementById('q-question-text').innerText = questionText;
 
             // Generate alternatives 
-            let optionPool = currentSet.cards.map(c => isEnToFr ? c.def : c.term);
+            let optionPool = [...new Set(currentSet.cards.map(c => isEnToFr ? c.def : c.term))];
             optionPool = optionPool.filter(o => o !== correctSolution);
-            
-            // Shuffle and pick 3
+
+            // Shuffle and pick up to 3 unique distractors
             optionPool.sort(() => Math.random() - 0.5);
             let chosenAlternatives = optionPool.slice(0, 3);
             
@@ -2238,7 +2242,7 @@
 
             // Save results 
             qResults.push({
-                term: isCorrect ? cardObj.term : cardObj.term,
+                term: cardObj.term,
                 correct: isCorrect,
                 selected: answer,
                 correctSolution: correctSolution,
