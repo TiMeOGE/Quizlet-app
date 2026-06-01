@@ -1,0 +1,89 @@
+name: Build debug APK
+
+# Rebuilds the debug APK on GitHub's runners (which have the Android SDK and
+# network access) and refreshes the committed copy at
+# .build-outputs/app-debug.apk so it always reflects the latest code on main.
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '.build-outputs/**'
+      - '**/*.md'
+  pull_request:
+    paths-ignore:
+      - '.build-outputs/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # AGP 9.1 requires JDK 17+.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # AGP 9.1 requires Build Tools 36.0.0 and SDK platform 36.
+      - name: Install required SDK packages
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      # AGP 9.1.1 requires Gradle 9.1.0+. No wrapper is committed, so we pin
+      # the version here.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.1.0'
+
+      # The debug build type is signed with this keystore; it is stored
+      # base64-encoded because the raw .jks is git-ignored.
+      - name: Decode debug keystore
+        run: base64 -d debug.keystore.base64 > debug.keystore
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Stage APK into .build-outputs
+        run: |
+          mkdir -p .build-outputs
+          cp app/build/outputs/apk/debug/app-debug.apk .build-outputs/app-debug.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: .build-outputs/app-debug.apk
+          if-no-files-found: error
+
+      # Only refresh the committed APK for pushes to main. Pushes made with the
+      # default GITHUB_TOKEN do not trigger new workflow runs, and the
+      # paths-ignore above guards against loops.
+      - name: Commit refreshed APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .build-outputs/app-debug.apk
+          if git diff --cached --quiet; then
+            echo "APK unchanged — nothing to commit."
+          else
+            git commit -m "ci: rebuild debug APK [skip ci]"
+            git push
+          fi
