@@ -45,12 +45,12 @@ jobs:
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
-      # AGP 9.1.1 requires Gradle 9.1.0+. No wrapper is committed, so we pin
+      # AGP 9.1.1 requires Gradle 9.3.1+. No wrapper is committed, so we pin
       # the version here.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.1.0'
+          gradle-version: '9.3.1'
 
       # The debug build type is signed with this keystore; it is stored
       # base64-encoded because the raw .jks is git-ignored.
