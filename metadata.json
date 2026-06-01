@@ -1,0 +1,6 @@
+{
+  "name": "QuizApp",
+  "description": "An advanced Quizlet-like application for mobile with offline flashcards, quizzes, writing test, and crossword mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,3004 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QuizApp</title>
+    <style>
+        :root {
+            --primary: #4255ff;
+            --primary-dark: #2c3fd1;
+            --bg: #f6f7fb;
+            --card-bg: #ffffff;
+            --text: #2e3856;
+            --muted: #586380;
+            --border: #d9dde8;
+            --success: #23b26d;
+            --error: #ff5a5a;
+            --warning: #f5a623;
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 40px;
+            font-size: 15px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Utility classes */
+        .d-none { display: none !important; }
+        .text-center { text-align: center; }
+        .flex { display: flex; }
+        .align-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-1 { gap: 8px; }
+        .gap-2 { gap: 16px; }
+
+        /* Navigation */
+        nav {
+            position: sticky;
+            top: 0;
+            height: 60px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .nav-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.97);
+        }
+
+        .nav-btn.secondary {
+            background-color: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .nav-btn.secondary:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        /* Container */
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 0 16px;
+        }
+
+        /* Set Card on Home Screen - Bento Grid look */
+        .sets-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 600px) {
+            .sets-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .set-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            min-height: 170px;
+        }
+
+        .set-card:hover, .set-card:active {
+            transform: translateY(-4px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 10px 15px -3px rgba(66, 85, 255, 0.12), 0 4px 6px -2px rgba(66, 85, 255, 0.06);
+        }
+
+        .set-card h3 {
+            font-size: 18px;
+            line-height: 1.3;
+            margin-bottom: 8px;
+            color: var(--text);
+            word-break: break-word;
+            font-weight: 700;
+        }
+
+        .set-card p.desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 16px;
+            word-break: break-word;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .set-card-meta {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            height: 10px;
+            background: #eef1f6;
+            border-radius: 9999px;
+            overflow: hidden;
+            display: flex;
+            width: 100%;
+            margin-top: 6px;
+        }
+
+        .progress-known {
+            background-color: var(--success);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-review {
+            background-color: var(--error);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .set-card-actions {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            display: flex;
+            gap: 6px;
+            opacity: 0.3;
+            transition: opacity 0.2s;
+        }
+
+        .set-card:hover .set-card-actions, .set-card:active .set-card-actions {
+            opacity: 1;
+        }
+
+        .action-icon-btn {
+            background: #f0f2f5;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .action-icon-btn:hover {
+            background: var(--border);
+        }
+
+        .action-icon-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Bento Progress Block styling */
+        .bento-progress-block {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        }
+        .bento-badge-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        .bento-stats-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+        }
+        .bento-badge-right {
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--bg);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            color: var(--text);
+        }
+
+        /* Forms Create / Edit */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--text);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 15px;
+            background: var(--card-bg);
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(66, 85, 255, 0.12);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 50px;
+        }
+
+        .card-editor-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 16px;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .card-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 800;
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-editor-fields {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        @media (min-width: 600px) {
+            .card-editor-fields {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Grid Modes - Bento Grid System */
+        .grid-modes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin: 24px 0;
+        }
+
+        .mode-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+            min-height: 100px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .mode-btn:hover, .mode-btn:active {
+            transform: translateY(-2px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 1st option: Flashcards - Big Bento Focal Point */
+        .grid-modes .mode-btn:nth-child(1) {
+            grid-column: span 2;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            min-height: auto;
+            box-shadow: 0 6px 20px rgba(66, 85, 255, 0.25);
+        }
+
+        .grid-modes .mode-btn:nth-child(1) .mode-btn-icon {
+            font-size: 32px;
+            order: 2;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .grid-modes .mode-btn:nth-child(1) .mode-btn-label {
+            font-size: 18px;
+            font-weight: 800;
+            order: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .grid-modes .mode-btn:nth-child(1) .mode-btn-label::after {
+            content: "Mémorisation rapide";
+            font-size: 13px;
+            font-weight: 500;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .grid-modes .mode-btn:nth-child(1):hover,
+        .grid-modes .mode-btn:nth-child(1):active {
+            box-shadow: 0 10px 24px rgba(66, 85, 255, 0.35);
+        }
+
+        /* 2nd & 3rd button styling with subtext */
+        .grid-modes .mode-btn:nth-child(2) .mode-btn-icon,
+        .grid-modes .mode-btn:nth-child(3) .mode-btn-icon {
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .grid-modes .mode-btn:nth-child(2) .mode-btn-label,
+        .grid-modes .mode-btn:nth-child(3) .mode-btn-label {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid-modes .mode-btn:nth-child(2) .mode-btn-label::after {
+            content: "Testez vos acquis";
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .grid-modes .mode-btn:nth-child(3) .mode-btn-label::after {
+            content: "Orthographe parfaite";
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* 4th button: Mots Croisés - Large colored bento card spanning 3rd row */
+        .grid-modes .mode-btn:nth-child(4) {
+            grid-column: span 2;
+            background: #FFF3E0;
+            border: 1px solid #FFE0B2;
+            color: #E65100;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            min-height: auto;
+        }
+
+        .grid-modes .mode-btn:nth-child(4) .mode-btn-icon {
+            font-size: 28px;
+            order: 2;
+        }
+
+        .grid-modes .mode-btn:nth-child(4) .mode-btn-label {
+            font-size: 15px;
+            font-weight: 700;
+            order: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .grid-modes .mode-btn:nth-child(4) .mode-btn-label::after {
+            content: "Défiez votre esprit en français et anglais";
+            font-size: 11px;
+            font-weight: 500;
+            color: #FF9800;
+            margin-top: 2px;
+        }
+
+        .grid-modes .mode-btn:nth-child(4):hover,
+        .grid-modes .mode-btn:nth-child(4):active {
+            background: #FFE8CC;
+            border-color: #FFCC80;
+        }
+
+        /* 5th & 6th buttons: Modifier & Exporter - side-by-side secondary utilities */
+        .grid-modes .mode-btn:nth-child(5),
+        .grid-modes .mode-btn:nth-child(6) {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: auto;
+            height: 48px;
+        }
+
+        .grid-modes .mode-btn:nth-child(5) .mode-btn-icon,
+        .grid-modes .mode-btn:nth-child(6) .mode-btn-icon {
+            font-size: 18px;
+            margin-bottom: 0;
+        }
+
+        .grid-modes .mode-btn:nth-child(5) .mode-btn-label,
+        .grid-modes .mode-btn:nth-child(6) .mode-btn-label {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* 7th button: Reset - red alert ribbon spanning row 5 */
+        .grid-modes .mode-btn:nth-child(7) {
+            grid-column: span 2;
+            background: #FFF5F5;
+            border: 1px solid #FEB2B2;
+            color: var(--error);
+            padding: 12px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: auto;
+            height: 48px;
+        }
+
+        .grid-modes .mode-btn:nth-child(7) .mode-btn-icon {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .grid-modes .mode-btn:nth-child(7) .mode-btn-label {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .grid-modes .mode-btn:nth-child(7):hover,
+        .grid-modes .mode-btn:nth-child(7):active {
+            background: #FEE2E2;
+            border-color: #FCA5A5;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border);
+            margin: 24px 0 16px 0;
+            gap: 8px;
+        }
+
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px 6px;
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--muted);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Card List view */
+        .row-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+            transition: transform 0.15s;
+        }
+
+        .row-card:hover {
+            transform: translateX(2px);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.neutral { background-color: #cbd5e1; }
+        .status-dot.known { background-color: var(--success); }
+        .status-dot.review { background-color: var(--error); }
+
+        .row-card-term {
+            flex: 1;
+            font-weight: 700;
+            word-break: break-word;
+            border-right: 1px solid var(--border);
+            padding-right: 8px;
+            color: var(--text);
+        }
+
+        .row-card-def {
+            flex: 1;
+            color: var(--muted);
+            word-break: break-word;
+            padding-left: 8px;
+            font-weight: 500;
+        }
+
+        /* Language Toggle Selectors */
+        .lang-selector {
+            display: flex;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 18px;
+        }
+
+        .lang-option {
+            flex: 1;
+            background: var(--card-bg);
+            color: var(--text);
+            text-align: center;
+            padding: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .lang-option.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Flashcard Component */
+        .flashcard-wrapper {
+            perspective: 1000px;
+            width: 100%;
+            height: 240px;
+            margin: 18px 0;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        .flashcard-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            border: 1px solid var(--border);
+            overflow-y: auto;
+            box-shadow: 0 8px 16px -4px rgba(0,0,0,0.04), 0 4px 6px -2px rgba(0,0,0,0.02);
+        }
+
+        .card-face.recto {
+            background-color: #edf2ff;
+            border-color: #ccd9ff;
+            color: var(--text);
+        }
+
+        .card-face.verso {
+            background-color: var(--card-bg);
+            transform: rotateY(180deg);
+            color: var(--text);
+        }
+
+        .card-face-tag {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: absolute;
+            top: 16px;
+        }
+
+        .card-face-text {
+            font-size: 26px;
+            font-weight: 800;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+
+        /* Controls for modes */
+        .fc-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .quiz-option {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s, transform 0.1s;
+            width: 100%;
+            margin-bottom: 12px;
+            color: var(--text);
+            outline: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .quiz-option:active {
+            transform: scale(0.99);
+        }
+
+        .quiz-option.correct {
+            background-color: #d1fae5;
+            border-color: var(--success);
+            color: #065f46;
+        }
+
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: var(--error);
+            color: #991b1b;
+        }
+
+        .points-indicator-container {
+            display: flex;
+            gap: 4px;
+            height: 6px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .point-dot {
+            flex: 1;
+            height: 100%;
+            border-radius: 3px;
+            background-color: #e2e8f0;
+        }
+
+        .point-dot.current { background-color: var(--primary); }
+        .point-dot.correct { background-color: var(--success); }
+        .point-dot.incorrect { background-color: var(--error); }
+
+        /* Writing Box */
+        .write-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+
+        .write-feedback {
+            padding: 14px;
+            border-radius: 10px;
+            margin-top: 14px;
+            font-weight: 700;
+        }
+
+        .write-feedback.correct {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .write-feedback.incorrect {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Results component */
+        .results-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+
+        .results-score {
+            font-size: 64px;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+            margin: 14px 0;
+            letter-spacing: -1px;
+        }
+
+        .error-results-container {
+            border: 1px solid var(--error);
+            border-radius: var(--radius);
+            background: rgba(255, 90, 90, 0.02);
+            padding: 18px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .error-result-item {
+            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+        }
+
+        .error-result-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Crossword */
+        .crossword-grid {
+            display: grid;
+            margin: 16px auto;
+            max-width: 100%;
+            width: max-content;
+            border: 4px solid var(--text);
+            background-color: var(--text);
+            gap: 2px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .cw-cell {
+            position: relative;
+            background-color: var(--text);
+            aspect-ratio: 1;
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text);
+            border: none;
+            outline: none;
+            padding: 0;
+            text-align: center;
+        }
+
+        .cw-cell.playable {
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .cw-cell.playable:focus {
+            background-color: #e0f2fe;
+        }
+
+        .cw-cell.playable.correct {
+            background-color: #bbf7d0;
+        }
+
+        .cw-cell.playable.incorrect {
+            background-color: #fecaca;
+        }
+
+        .cw-cell-number {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 8px;
+            color: #555;
+            pointer-events: none;
+            font-weight: bold;
+        }
+
+        .cw-clues {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        @media (min-width: 600px) {
+            .cw-clues {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .cw-clues-column {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 250px;
+            overflow-y: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .cw-clue-item {
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: color 0.1s;
+        }
+
+        .cw-clue-item:hover {
+            color: var(--primary);
+        }
+
+        .cw-clue-item:last-child { border-bottom: none; }
+        .cw-clue-item.answered { text-decoration: line-through; color: var(--muted); }
+
+        /* Generic buttons */
+        .btn-theme {
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.2s, transform 0.1s;
+            font-size: 14px;
+        }
+
+        .btn-theme:hover {
+            opacity: 0.95;
+        }
+
+        .btn-theme:active {
+            transform: scale(0.97);
+        }
+
+        .btn-theme.danger {
+            background-color: var(--error);
+        }
+
+        .btn-theme.success {
+            background-color: var(--success);
+        }
+
+        .btn-theme.secondary {
+            background-color: #e2e8f0;
+            color: var(--text);
+        }
+
+        .btn-theme.secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        .badge-count {
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            padding: 2px 7px;
+            font-size: 11px;
+            margin-left: 6px;
+            font-weight: 800;
+        }
+
+        .badge-count.review { background: var(--error); }
+        .badge-count.known { background: var(--success); }
+    </style>
+</head>
+<body>
+
+    <!-- STICKY HEADER -->
+    <nav>
+        <div class="nav-logo" onclick="showView('view-home')">
+            <span>🃏</span> <strong>QuizApp</strong>
+        </div>
+        <div>
+            <button class="nav-btn" onclick="openCreateSetForm()">＋ Créer</button>
+        </div>
+    </nav>
+
+    <!-- WRAPPERS/CONTAINERS -->
+    <div class="container">
+
+        <!-- 🏠 VIEW: HOME -->
+        <div id="view-home" class="app-view">
+            <div class="flex align-center justify-between" style="margin-bottom: 10px;">
+                <h2>Mes sets d'apprentissage</h2>
+                <button class="nav-btn secondary" onclick="triggerImportSelection()">📥 Importer</button>
+            </div>
+            
+            <input type="file" id="import-input" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+
+            <div id="sets-list" class="sets-grid">
+                <!-- Programmatically populated -->
+            </div>
+        </div>
+
+        <!-- ➕ VIEW: CREATE / EDIT SET -->
+        <div id="view-edit-set" class="app-view d-none">
+            <h2 id="editor-title">Créer un set de cartes</h2>
+            <p style="color: var(--muted); margin-bottom: 16px;">Ajoutez des cartes d'apprentissage anglais-français</p>
+
+            <div class="form-group">
+                <label>Nom du set</label>
+                <input type="text" id="set-title-input" class="form-control" placeholder="Ex: Voyage à Londres, Verbes irréguliers...">
+            </div>
+            <div class="form-group">
+                <label>Description (optionnel)</label>
+                <textarea id="set-desc-input" class="form-control" placeholder="Brève explication ou thème de ces cartes..."></textarea>
+            </div>
+
+            <div class="flex align-center justify-between" style="margin: 20px 0 10px 0;">
+                <h3>Cartes d'apprentissage</h3>
+                <button class="btn-theme secondary" onclick="addCardToEditor()">＋ Ajouter une carte</button>
+            </div>
+
+            <div id="cards-editor-container">
+                <!-- Programmatically populated -->
+            </div>
+
+            <div class="flex justify-between" style="margin-top: 24px;">
+                <button class="btn-theme secondary" onclick="showView('view-home')">Annuler</button>
+                <button class="btn-theme" onclick="saveSetFromEditor()">Enregistrer</button>
+            </div>
+        </div>
+
+        <!-- 📋 VIEW: SET DETAIL -->
+        <div id="view-set-detail" class="app-view d-none">
+            <div class="flex align-center gap-1" style="color: var(--primary); cursor: pointer; font-weight: 600;" onclick="showView('view-home')">
+                ← Retour à l'accueil
+            </div>
+
+            <h2 id="set-view-title" style="margin-top: 12px; font-size: 24px;"></h2>
+            <p id="set-view-desc" style="color: var(--muted); margin-bottom: 16px;"></p>
+            
+            <!-- Overall Progress Bento Widget -->
+            <div class="bento-progress-block">
+                <div class="flex justify-between items-start" style="margin-bottom: 8px;">
+                    <div>
+                        <h4 class="bento-badge-title">Progression actuelle</h4>
+                        <div id="set-view-stats" class="bento-stats-text">0 cartes</div>
+                    </div>
+                    <span class="bento-badge-right">Statistiques de cartes</span>
+                </div>
+                <div class="progress-bar-container" style="height: 10px; margin-bottom: 12px;">
+                    <div id="set-progress-known" class="progress-known" style="width: 0%;"></div>
+                    <div id="set-progress-review" class="progress-review" style="width: 0%;"></div>
+                </div>
+                <div class="flex justify-between" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                    <span style="color: var(--success); display: flex; align-items: center; gap: 4px;"><span class="status-dot known" style="display:inline-block; margin-right:0;"></span> Connues</span>
+                    <span style="color: var(--error); display: flex; align-items: center; gap: 4px;"><span class="status-dot review" style="display:inline-block; margin-right:0;"></span> À revoir</span>
+                    <span style="color: var(--muted); display: flex; align-items: center; gap: 4px;"><span class="status-dot neutral" style="display:inline-block; margin-right:0;"></span> Neutres</span>
+                </div>
+            </div>
+
+            <!-- Grid Modes (7 buttons) -->
+            <div class="grid-modes">
+                <div class="mode-btn" onclick="startFlashcardsMode()">
+                    <span class="mode-btn-icon">🃏</span>
+                    <span class="mode-btn-label">Flashcards</span>
+                </div>
+                <div class="mode-btn" onclick="startQuizMode()">
+                    <span class="mode-btn-icon">✏️</span>
+                    <span class="mode-btn-label">Quiz QCM</span>
+                </div>
+                <div class="mode-btn" onclick="startWriteMode()">
+                    <span class="mode-btn-icon">⌨️</span>
+                    <span class="mode-btn-label">Écrire</span>
+                </div>
+                <div class="mode-btn" onclick="startCrosswordMode()">
+                    <span class="mode-btn-icon">🧩</span>
+                    <span class="mode-btn-label">Mots Croisés</span>
+                </div>
+                <div class="mode-btn" onclick="editCurrentSet()">
+                    <span class="mode-btn-icon">🖊️</span>
+                    <span class="mode-btn-label">Modifier</span>
+                </div>
+                <div class="mode-btn" onclick="exportCurrentSet()">
+                    <span class="mode-btn-icon">📤</span>
+                    <span class="mode-btn-label">Exporter</span>
+                </div>
+                <div class="mode-btn" onclick="resetCurrentSetProgress()">
+                    <span class="mode-btn-icon">🔄</span>
+                    <span class="mode-btn-label">Réinitialiser</span>
+                </div>
+            </div>
+
+            <!-- Filter tabs under modes -->
+            <div class="tabs">
+                <div class="tab-item active" id="tab-all" onclick="filterSetDetail('all')">Toutes <span class="badge-count" id="badge-count-all">0</span></div>
+                <div class="tab-item" id="tab-review" onclick="filterSetDetail('review')">À revoir <span class="badge-count review" id="badge-count-review">0</span></div>
+                <div class="tab-item" id="tab-known" onclick="filterSetDetail('known')">Connues <span class="badge-count known" id="badge-count-known">0</span></div>
+            </div>
+
+            <!-- List items -->
+            <div id="set-cards-list"></div>
+        </div>
+
+        <!-- 🃏 VIEW: FLASHCARDS -->
+        <div id="view-flashcards" class="app-view d-none">
+            <div class="flex justify-between align-center">
+                <div class="flex align-center gap-1" style="color: var(--primary); cursor: pointer; font-weight:600;" onclick="returnToSet()">
+                    ← Quitter les Flashcards
+                </div>
+                <div id="fc-progress-txt" style="font-size: 13px; font-weight: 600;">Card 1 / 1</div>
+            </div>
+
+            <div class="progress-bar-container" style="height: 6px; margin: 10px 0 16px 0;">
+                <div id="fc-progress-fill" style="background-color: var(--primary); width: 0%;"></div>
+            </div>
+
+            <!-- Configuration Options -->
+            <div class="flex gap-2" style="background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+                <div class="flex align-center gap-1" style="font-size: 13px;">
+                    <input type="checkbox" id="fc-shuffle" onchange="toggleFcShuffle()">
+                    <label for="fc-shuffle" style="font-weight: 600; cursor: pointer;">Mélanger</label>
+                </div>
+                <div class="flex align-center gap-1" style="font-size: 13px;">
+                    <input type="checkbox" id="fc-review-only" onchange="toggleFcReviewOnly()">
+                    <label for="fc-review-only" style="font-weight: 600; cursor: pointer;">À revoir seulement</label>
+                </div>
+            </div>
+
+            <!-- Lang selector -->
+            <div class="lang-selector">
+                <button id="fc-lang-en" class="lang-option active" onclick="setFcLang('en')">🇬🇧 Anglais en premier</button>
+                <button id="fc-lang-fr" class="lang-option" onclick="setFcLang('fr')">🇫🇷 Français en premier</button>
+            </div>
+
+            <!-- Card Box -->
+            <div class="flashcard-wrapper" onclick="flipCard()">
+                <div class="flashcard-inner" id="fc-inner">
+                    <!-- Recto -->
+                    <div class="card-face recto">
+                        <span class="card-face-tag" id="recto-tag">Anglais</span>
+                        <div class="card-face-text" id="recto-text">Hello</div>
+                    </div>
+                    <!-- Verso -->
+                    <div class="card-face verso">
+                        <span class="card-face-tag" id="verso-tag">Français</span>
+                        <div class="card-face-text" id="verso-text">Bonjour</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate controls shown only after flip -->
+            <div id="fc-rate-controls" class="d-none" style="display:-flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn-theme danger" style="flex:1;" onclick="rateCard(false)">❌ Je ne savais pas</button>
+                <button class="btn-theme success" style="flex:1;" onclick="rateCard(true)">✅ Je savais</button>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="fc-controls">
+                <button class="btn-theme secondary" style="flex:1;" onclick="prevCard()">← Précédent</button>
+                <div class="text-center" style="align-self:center; min-width: 60px;">
+                    <span style="color: var(--error); font-weight: bold; margin-right: 12px;">❌ <span id="fc-unknown-count">0</span></span>
+                    <span style="color: var(--success); font-weight: bold;">✅ <span id="fc-known-count">0</span></span>
+                </div>
+                <button class="btn-theme secondary" style="flex:1;" onclick="nextCard()">Suivant →</button>
+            </div>
+        </div>
+
+        <!-- ✏️ VIEW: QUIZ QCM -->
+        <div id="view-quiz" class="app-view d-none">
+            <div class="flex justify-between align-center" style="margin-bottom: 12px;">
+                <div class="flex align-center gap-1" style="color: var(--primary); cursor: pointer; font-weight:600;" onclick="returnToSet()">
+                    ← Quitter le Quiz
+                </div>
+                <div id="q-counter" style="font-size: 13px; font-weight: 600;">Question 1 / 1</div>
+            </div>
+
+            <div class="points-indicator-container" id="q-dots-container"></div>
+
+            <!-- Lang select -->
+            <div class="lang-selector">
+                <button id="q-lang-en" class="lang-option active" onclick="setQLang('en_fr')">🇬🇧 Anglais → FR</button>
+                <button id="q-lang-fr" class="lang-option" onclick="setQLang('fr_en')">🇫🇷 Français → EN</button>
+            </div>
+
+            <div class="write-box text-center" style="margin-bottom: 24px;">
+                <span style="font-size: 12px; text-transform: uppercase; color: var(--muted); font-weight: bold; display: block; margin-bottom: 8px;">Question</span>
+                <h2 id="q-question-text" style="font-size: 26px;"></h2>
+            </div>
+
+            <div id="q-options-container">
+                <!-- Programmatically populated choices -->
+            </div>
+        </div>
+
+        <!-- ⌨️ VIEW: ÉCRIRE -->
+        <div id="view-write" class="app-view d-none">
+            <div class="flex justify-between align-center" style="margin-bottom: 12px;">
+                <div class="flex align-center gap-1" style="color: var(--primary); cursor: pointer; font-weight: 600;" onclick="returnToSet()">
+                    ← Quitter l'exercice
+                </div>
+                <div id="w-counter" style="font-size: 13px; font-weight: 600;">1 / 1</div>
+            </div>
+
+            <div class="points-indicator-container" id="w-dots-container"></div>
+
+            <!-- Lang select -->
+            <div class="lang-selector">
+                <button id="w-lang-en" class="lang-option active" onclick="setWLang('en_fr')">🇬🇧 Anglais → FR</button>
+                <button id="w-lang-fr" class="lang-option" onclick="setWLang('fr_en')">🇫🇷 Français → EN</button>
+            </div>
+
+            <div class="write-box">
+                <span style="font-size: 12px; text-transform: uppercase; color: var(--muted); font-weight: bold; display: block; margin-bottom: 4px;">Traduire</span>
+                <h2 id="w-question-text" style="font-size: 24px; margin-bottom: 18px;"></h2>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <input type="text" id="w-input" class="form-control" placeholder="Entrez la traduction..." onkeydown="handleWKeydown(event)" autocomplete="off">
+                </div>
+
+                <div class="flex gap-1">
+                    <button class="btn-theme" style="flex:1;" id="w-submit-btn" onclick="submitWAnswer()">Valider</button>
+                    <button class="btn-theme secondary" style="display-none; flex:1;" id="w-next-btn" onclick="nextWQuestion()">Suivant</button>
+                </div>
+
+                <div id="w-feedback-box" class="d-none">
+                    <div id="w-feedback-title" class="write-feedback">Correct</div>
+                    <div style="margin-top: 10px; font-size: 14px;">
+                        <div>Réponse attendue : <strong id="w-expected" style="color: var(--success);"></strong></div>
+                        <div id="w-user-box">Votre saisie : <strong id="w-user-input-text" style="color: var(--error);"></strong></div>
+                    </div>
+                    <button class="btn-theme success" style="margin-top: 14px; width: 100%; font-size: 13px;" id="w-override-btn" onclick="overrideWAnswer()">
+                        ✅ J'avais juste (Marquer correct)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🧩 VIEW: MOTS CROISÉS (CROSSWORD) -->
+        <div id="view-crossword" class="app-view d-none">
+            <div class="flex justify-between align-center" style="margin-bottom: 10px;">
+                <div class="flex align-center gap-1" style="color: var(--primary); cursor: pointer; font-weight: 600;" onclick="returnToSet()">
+                    ← Quitter
+                </div>
+                <h2>Mots Croisés (🧩)</h2>
+            </div>
+
+            <!-- Lang select -->
+            <div class="lang-selector">
+                <button id="cw-lang-en" class="lang-option active" onclick="setCwLang('en_fr')">🇬🇧 Anglais → FR</button>
+                <button id="cw-lang-fr" class="lang-option" onclick="setCwLang('fr_en')">🇫🇷 Français → EN</button>
+            </div>
+
+            <div id="cw-generator-feedback" class="text-center" style="padding: 12px; background: white; border-radius: 8px; font-weight: bold; margin-bottom: 12px;">
+                Crée la grille en temps réel...
+            </div>
+
+            <div id="cw-game-area" class="d-none">
+                <div id="cw-grid-container" class="crossword-grid"></div>
+
+                <div class="flex gap-1" style="margin-top: 18px; margin-bottom: 18px;">
+                    <button class="btn-theme" style="flex:1;" onclick="checkCrossword()">Vérifier</button>
+                    <button class="btn-theme secondary" onclick="revealCrossword()">Révéler les solutions</button>
+                    <button class="btn-theme secondary" onclick="startCrossword(true)">🔄 Générer autre</button>
+                </div>
+
+                <div class="cw-clues">
+                    <div class="cw-clues-column">
+                        <h4 style="margin-bottom:6px; color: var(--primary);">Horizontal (Across)</h4>
+                        <div id="cw-clues-across"></div>
+                    </div>
+                    <div class="cw-clues-column">
+                        <h4 style="margin-bottom:6px; color: var(--primary);">Vertical (Down)</h4>
+                        <div id="cw-clues-down"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📊 VIEW: RESULTS -->
+        <div id="view-results" class="app-view d-none">
+            <div class="results-box">
+                <div id="results-emoji" style="font-size: 56px;">🏆</div>
+                <h2 id="results-title">Félicitations !</h2>
+                <div id="results-score-value" class="results-score">100%</div>
+                <p id="results-subtitle" style="color: var(--muted); font-weight: 600;"></p>
+
+                <div id="results-errors-box" class="error-results-container d-none">
+                    <h3 style="color: var(--error); margin-bottom: 10px;">❌ Erreurs à revoir :</h3>
+                    <div id="results-errors-list"></div>
+                </div>
+
+                <div style="margin-top: 18px; text-align: left;">
+                    <h4 style="margin-bottom: 10px;">Détails complets de la session</h4>
+                    <div id="results-full-list" style="max-height: 250px; overflow-y: auto; background: #f8fafc; border-radius: 8px; padding: 10px;"></div>
+                </div>
+
+                <div class="flex gap-1" style="margin-top: 24px;">
+                    <button class="btn-theme secondary" style="flex:1;" onclick="returnToSet()">Retour au set</button>
+                    <button class="btn-theme" style="flex:1;" id="results-retry-btn">Réessayer</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // GLOBALS DECLARED EXACTLY ONCE
+        let sets = [];
+        let progress = {};
+        let currentSetId = null;
+        let currentSet = null;
+
+        // Flashcards state
+        let fcIndex = 0;
+        let fcLang = "en"; 
+        let fcCards = [];
+        let fcStateSaved = null;
+
+        // Quiz state
+        let qIndex = 0;
+        let qLang = "en_fr"; 
+        let qCards = [];
+        let qResults = []; 
+        let qScore = 0;
+
+        // Write state
+        let wIndex = 0;
+        let wLang = "en_fr";
+        let wCards = [];
+        let wResults = []; 
+        let wCorrectCount = 0;
+
+        // Crossword state
+        let cwLang = "en_fr";
+        let cwGridSize = 14;
+        let cwGrid = []; 
+        let cwPlacements = []; 
+        let cwSelectedRow = -1;
+        let cwSelectedCol = -1;
+        let cwActiveDir = 'H';
+
+        // Preloaded dataset 
+        const DEFAULT_SETS = [
+            {
+                id: "set_default_1",
+                title: "🇬🇧 Anglais Express — Les Indispensables",
+                desc: "Les expressions et mots d'anglais les plus utiles au quotidien.",
+                cards: [
+                    { term: "Hello", def: "Bonjour" },
+                    { term: "Thank you", def: "Merci" },
+                    { term: "Water", def: "Eau" },
+                    { term: "Bread", def: "Pain" },
+                    { term: "Where is...?", def: "Où se trouve... ?" },
+                    { term: "Please", def: "S'il vous plaît" },
+                    { term: "Excuse me", def: "Excusez-moi" },
+                    { term: "Goodbye", def: "Au revoir" }
+                ]
+            },
+            {
+                id: "set_default_2",
+                title: "🇬🇧 Verbes de base",
+                desc: "Verbes essentiels pour dialoguer au présent.",
+                cards: [
+                    { term: "To walk", def: "Marcher" },
+                    { term: "To run", def: "Courir" },
+                    { term: "To sleep", def: "Dormir" },
+                    { term: "To eat", def: "Manger" },
+                    { term: "To write", def: "Écrire" },
+                    { term: "To speak", def: "Parler" }
+                ]
+            }
+        ];
+
+        // INIT
+        window.addEventListener('load', () => {
+            initApp();
+        });
+
+        function initApp() {
+            // Load from LS
+            const loadedSets = localStorage.getItem('quizapp_sets');
+            if (loadedSets) {
+                sets = JSON.parse(loadedSets);
+            } else {
+                sets = DEFAULT_SETS;
+                saveSetsToLocalStorage();
+            }
+
+            const loadedProgress = localStorage.getItem('quizapp_progress');
+            if (loadedProgress) {
+                progress = JSON.parse(loadedProgress);
+            } else {
+                progress = {};
+                saveProgressToLocalStorage();
+            }
+
+            renderSetsGrid();
+            showView('view-home');
+        }
+
+        function saveSetsToLocalStorage() {
+            localStorage.setItem('quizapp_sets', JSON.stringify(sets));
+        }
+
+        function saveProgressToLocalStorage() {
+            localStorage.setItem('quizapp_progress', JSON.stringify(progress));
+        }
+
+        // NAVIGATION VIEWS
+        function showView(viewId) {
+            document.querySelectorAll('.app-view').forEach(v => v.classList.add('d-none'));
+            document.getElementById(viewId).classList.remove('d-none');
+            window.scrollTo({top: 0, behavior: 'instant'});
+        }
+
+        function returnToSet() {
+            if (currentSetId) {
+                openSetDetail(currentSetId);
+            } else {
+                showView('view-home');
+            }
+        }
+
+        window.handleAndroidBack = function() {
+            const home = document.getElementById('view-home');
+            const editSet = document.getElementById('view-edit-set');
+            const setDetail = document.getElementById('view-set-detail');
+            const flashcards = document.getElementById('view-flashcards');
+            const quiz = document.getElementById('view-quiz');
+            const write = document.getElementById('view-write');
+            const crossword = document.getElementById('view-crossword');
+            const results = document.getElementById('view-results');
+
+            if (home && !home.classList.contains('d-none')) {
+                return false;
+            }
+
+            if (editSet && !editSet.classList.contains('d-none')) {
+                returnToSet();
+                return true;
+            }
+
+            if (setDetail && !setDetail.classList.contains('d-none')) {
+                showView('view-home');
+                return true;
+            }
+
+            if (flashcards && !flashcards.classList.contains('d-none')) {
+                returnToSet();
+                return true;
+            }
+
+            if (quiz && !quiz.classList.contains('d-none')) {
+                if (confirm("Voulez-vous vraiment quitter le quiz en cours ?")) {
+                    returnToSet();
+                }
+                return true;
+            }
+
+            if (write && !write.classList.contains('d-none')) {
+                if (confirm("Voulez-vous vraiment quitter l'exercice en cours ?")) {
+                    returnToSet();
+                }
+                return true;
+            }
+
+            if (crossword && !crossword.classList.contains('d-none')) {
+                if (confirm("Voulez-vous vraiment abandonner les mots croisés en cours ?")) {
+                    returnToSet();
+                }
+                return true;
+            }
+
+            if (results && !results.classList.contains('d-none')) {
+                returnToSet();
+                return true;
+            }
+
+            showView('view-home');
+            return true;
+        };
+
+        // RENDER HOMEPAGE
+        function renderSetsGrid() {
+            const container = document.getElementById('sets-list');
+            container.innerHTML = "";
+
+            if (sets.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted);">Aucun set de cartes trouvé. Cliquez sur "+ Créer" ou "Importer" pour commencer.</div>`;
+                return;
+            }
+
+            sets.forEach(set => {
+                // Calculate progress
+                const setProg = progress[set.id] || {};
+                let knownCount = 0;
+                let reviewCount = 0;
+                set.cards.forEach((c, idx) => {
+                    if (setProg[idx] === 'known') knownCount++;
+                    if (setProg[idx] === 'unknown') reviewCount++;
+                });
+
+                const total = set.cards.length;
+                const knownPct = total > 0 ? (knownCount / total) * 100 : 0;
+                const reviewPct = total > 0 ? (reviewCount / total) * 100 : 0;
+
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'set-card';
+                cardDiv.onclick = () => openSetDetail(set.id);
+
+                cardDiv.innerHTML = `
+                    <div class="set-card-actions">
+                        <button class="action-icon-btn" onclick="event.stopPropagation(); editSet('${set.id}')">✏️</button>
+                        <button class="action-icon-btn" onclick="event.stopPropagation(); deleteSet('${set.id}')">🗑️</button>
+                    </div>
+                    <div>
+                        <span class="set-card-meta">${total} CARTE${total > 1 ? 'S' : ''}</span>
+                        <h3>${escapeHTML(set.title)}</h3>
+                        <p class="desc">${escapeHTML(set.desc || 'Pas de description')}</p>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 10px; font-weight:600; color: var(--muted);">
+                            <span>${knownCount} connus</span>
+                            <span>${reviewCount} à revoir</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-known" style="width: ${knownPct}%;"></div>
+                            <div class="progress-review" style="width: ${reviewPct}%;"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(cardDiv);
+            });
+        }
+
+        // EXPORT AND IMPORT SET (JSON FILE STORAGE)
+        function triggerImportSelection() {
+            document.getElementById('import-input').click();
+        }
+
+        function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed.quizapp_set) {
+                        alert("Le fichier sélectionné n'est pas un set QuizApp valide.");
+                        return;
+                    }
+
+                    // Check if duplicate title exists
+                    const existingSetIndex = sets.findIndex(s => s.title.toLowerCase() === parsed.title.toLowerCase());
+                    if (existingSetIndex !== -1) {
+                        if (!confirm(`Un set nommé "${parsed.title}" existe déjà. Voulez-vous le remplacer ? (Les données de progression seront réinitialisées)`)) {
+                            return;
+                        }
+                        // Delete matching and replace
+                        sets.splice(existingSetIndex, 1);
+                    }
+
+                    // ID generation
+                    const newSet = {
+                        id: 'set_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+                        title: parsed.title,
+                        desc: parsed.desc || "",
+                        cards: parsed.cards || []
+                    };
+
+                    sets.push(newSet);
+                    saveSetsToLocalStorage();
+                    initApp();
+                } catch(err) {
+                    alert("Erreur de lecture du fichier JSON: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ""; // clear inputs
+        }
+
+        // DELETE SET
+        function deleteSet(setId) {
+            if (confirm("Voulez-vous vraiment supprimer ce set ? Cette action est irréversible.")) {
+                sets = sets.filter(s => s.id !== setId);
+                if (progress[setId]) {
+                    delete progress[setId];
+                }
+                saveSetsToLocalStorage();
+                saveProgressToLocalStorage();
+                initApp();
+            }
+        }
+
+        // ➕ CARD WRITER / EDITOR
+        let editorCardIdCounter = 0;
+
+        function openCreateSetForm() {
+            currentSetId = null;
+            document.getElementById('editor-title').innerText = "Créer un set de cartes";
+            document.getElementById('set-title-input').value = "";
+            document.getElementById('set-desc-input').value = "";
+            
+            const container = document.getElementById('cards-editor-container');
+            container.innerHTML = "";
+            editorCardIdCounter = 0;
+            
+            // Add initial empty cards
+            addCardToEditor();
+            addCardToEditor();
+            showView('view-edit-set');
+        }
+
+        function editSet(setId) {
+            const set = sets.find(s => s.id === setId);
+            if (!set) return;
+
+            currentSetId = setId;
+            document.getElementById('editor-title').innerText = "Modifier le set de cartes";
+            document.getElementById('set-title-input').value = set.title;
+            document.getElementById('set-desc-input').value = set.desc || "";
+
+            const container = document.getElementById('cards-editor-container');
+            container.innerHTML = "";
+            editorCardIdCounter = 0;
+
+            set.cards.forEach(card => {
+                addCardToEditor(card.term, card.def);
+            });
+
+            if (set.cards.length === 0) {
+                addCardToEditor();
+            }
+
+            showView('view-edit-set');
+        }
+
+        function editCurrentSet() {
+            if (currentSetId) editSet(currentSetId);
+        }
+
+        function addCardToEditor(term = "", def = "") {
+            const container = document.getElementById('cards-editor-container');
+            const cardId = ++editorCardIdCounter;
+
+            const div = document.createElement('div');
+            div.className = 'card-editor-item';
+            div.id = `card-editor-${cardId}`;
+            div.innerHTML = `
+                <div class="card-editor-header">
+                    <span>CARTE #${cardId}</span>
+                    <button class="action-icon-btn" onclick="removeCardFromEditor(${cardId})" style="color: var(--error);">🗑️</button>
+                </div>
+                <div class="card-editor-fields">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>TERME (EN)</label>
+                        <textarea class="form-control editor-term" placeholder="Entrez le terme en anglais..." required>${escapeHTML(term)}</textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>DÉFINITION (FR)</label>
+                        <textarea class="form-control editor-def" placeholder="Entrez la traduction en français..." required>${escapeHTML(def)}</textarea>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeCardFromEditor(cardId) {
+            const items = document.querySelectorAll('.card-editor-item');
+            if (items.length <= 1) {
+                alert("Votre set d'apprentissage doit contenir au moins 1 carte.");
+                return;
+            }
+            const el = document.getElementById(`card-editor-${cardId}`);
+            if (el) el.remove();
+        }
+
+        function saveSetFromEditor() {
+            const title = document.getElementById('set-title-input').value.trim();
+            const desc = document.getElementById('set-desc-input').value.trim();
+
+            if (!title) {
+                alert("Veuillez donner un titre à votre set d'apprentissage.");
+                return;
+            }
+
+            const items = document.querySelectorAll('.card-editor-item');
+            const newCards = [];
+            let valid = true;
+
+            items.forEach(item => {
+                const termVal = item.querySelector('.editor-term').value.trim();
+                const defVal = item.querySelector('.editor-def').value.trim();
+
+                if (!termVal || !defVal) {
+                    valid = false;
+                } else {
+                    newCards.push({ term: termVal, def: defVal });
+                }
+            });
+
+            if (!valid) {
+                alert("Toutes vos cartes ajoutées doivent avoir un terme anglais et français renseignés.");
+                return;
+            }
+
+            if (currentSetId) {
+                // Update
+                const index = sets.findIndex(s => s.id === currentSetId);
+                if (index !== -1) {
+                    sets[index].title = title;
+                    sets[index].desc = desc;
+                    sets[index].cards = newCards;
+                }
+            } else {
+                // Insert new
+                const nextId = 'set_' + Date.now();
+                sets.push({
+                    id: nextId,
+                    title: title,
+                    desc: desc,
+                    cards: newCards
+                });
+                currentSetId = nextId;
+            }
+
+            saveSetsToLocalStorage();
+            initApp();
+            openSetDetail(currentSetId);
+        }
+
+        // 📋 SET DETAILED VIEW
+        let currentDetailFilter = 'all';
+
+        function openSetDetail(setId) {
+            currentSetId = setId;
+            currentSet = sets.find(s => s.id === setId);
+            if (!currentSet) {
+                showView('view-home');
+                return;
+            }
+
+            document.getElementById('set-view-title').innerText = currentSet.title;
+            document.getElementById('set-view-desc').innerText = currentSet.desc || "Aucune description";
+
+            renderSetDetailProgress();
+            filterSetDetail(currentDetailFilter);
+            showView('view-set-detail');
+        }
+
+        function renderSetDetailProgress() {
+            const setProg = progress[currentSetId] || {};
+            let knownCount = 0;
+            let reviewCount = 0;
+            
+            currentSet.cards.forEach((c, idx) => {
+                if (setProg[idx] === 'known') knownCount++;
+                if (setProg[idx] === 'unknown') reviewCount++;
+            });
+
+            const total = currentSet.cards.length;
+            const neutralCount = total - knownCount - reviewCount;
+
+            const knownPct = total > 0 ? (knownCount / total) * 100 : 0;
+            const reviewPct = total > 0 ? (reviewCount / total) * 100 : 0;
+
+            document.getElementById('set-progress-known').style.width = knownPct + '%';
+            document.getElementById('set-progress-review').style.width = reviewPct + '%';
+            
+            document.getElementById('set-view-stats').innerText = `${knownCount} connues • ${reviewCount} à revoir • ${total} cartes au total`;
+
+            // Update badge text values
+            document.getElementById('badge-count-all').innerText = total;
+            document.getElementById('badge-count-review').innerText = reviewCount;
+            document.getElementById('badge-count-known').innerText = knownCount;
+        }
+
+        function filterSetDetail(type) {
+            currentDetailFilter = type;
+            
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            if (type === 'all') document.getElementById('tab-all').classList.add('active');
+            if (type === 'review') document.getElementById('tab-review').classList.add('active');
+            if (type === 'known') document.getElementById('tab-known').classList.add('active');
+
+            const container = document.getElementById('set-cards-list');
+            container.innerHTML = "";
+
+            const setProg = progress[currentSetId] || {};
+            let matchCount = 0;
+
+            currentSet.cards.forEach((card, idx) => {
+                const status = setProg[idx] || 'neutral'; // 'known', 'unknown', 'neutral'
+                
+                let isMatch = false;
+                if (type === 'all') isMatch = true;
+                if (type === 'known' && status === 'known') isMatch = true;
+                if (type === 'review' && status === 'unknown') isMatch = true;
+
+                if (isMatch) {
+                    matchCount++;
+                    const row = document.createElement('div');
+                    row.className = 'row-card';
+                    
+                    let dotClass = 'neutral';
+                    if (status === 'known') dotClass = 'known';
+                    if (status === 'unknown') dotClass = 'review';
+
+                    row.innerHTML = `
+                        <div class="status-dot ${dotClass}"></div>
+                        <div class="row-card-term">${escapeHTML(card.term)}</div>
+                        <div class="row-card-def">${escapeHTML(card.def)}</div>
+                    `;
+                    container.appendChild(row);
+                }
+            });
+
+            if (matchCount === 0) {
+                container.innerHTML = `<p style="text-align: center; color: var(--muted); padding: 24px; font-style: italic;">Aucune carte ne correspond à ce filtre.</p>`;
+            }
+        }
+
+        function exportCurrentSet() {
+            if (!currentSet) return;
+            const dataToExport = {
+                quizapp_set: true,
+                title: currentSet.title,
+                desc: currentSet.desc,
+                cards: currentSet.cards
+            };
+
+            const jsonStr = JSON.stringify(dataToExport, null, 2);
+            const filename = (currentSet.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()) + ".json";
+
+            // If android native bridge is present, call it
+            if (window.QuizAppBridge && typeof window.QuizAppBridge.downloadJSON === 'function') {
+                window.QuizAppBridge.downloadJSON(jsonStr, filename);
+            } else {
+                // Web Fallback
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function resetCurrentSetProgress() {
+            if (!currentSetId) return;
+            if (confirm("Réinitialiser votre progression d'apprentissage pour ce set ? Toutes les cartes repasseront en gris.")) {
+                progress[currentSetId] = {};
+                saveProgressToLocalStorage();
+                renderSetDetailProgress();
+                filterSetDetail(currentDetailFilter);
+            }
+        }
+
+        // 🃏 FLASHCARDS ENGINE
+        function startFlashcardsMode() {
+            if (!currentSet || currentSet.cards.length === 0) {
+                alert("Ce set est vide.");
+                return;
+            }
+
+            // Restore position if exists
+            const state = localStorage.getItem('quizapp_fc_state');
+            let restored = false;
+            
+            // Check shuffle and mode from checkboxes
+            const shuffleChecked = document.getElementById('fc-shuffle').checked;
+            const reviewOnlyChecked = document.getElementById('fc-review-only').checked;
+
+            setupFlashcardDeck(shuffleChecked, reviewOnlyChecked);
+
+            if (state) {
+                try {
+                    const parsed = JSON.parse(state);
+                    if (parsed.setId === currentSetId && parsed.idx < fcCards.length && !shuffleChecked && !reviewOnlyChecked) {
+                        fcIndex = parsed.idx;
+                        fcLang = parsed.lang || "en";
+                        restored = true;
+                    }
+                } catch(e) {}
+            }
+
+            if (!restored) {
+                fcIndex = 0;
+            }
+
+            // Sync selectors in screen
+            setFcLang(fcLang);
+            updateFlashcard();
+            showView('view-flashcards');
+        }
+
+        function setupFlashcardDeck(shuffle, reviewOnly) {
+            const setProg = progress[currentSetId] || {};
+            
+            // Filter cards
+            fcCards = currentSet.cards.map((card, originalIndex) => {
+                return { ...card, originalIndex };
+            });
+
+            if (reviewOnly) {
+                fcCards = fcCards.filter(c => setProg[c.originalIndex] === 'unknown');
+            }
+
+            if (fcCards.length === 0) {
+                alert("Aucune carte à revoir pour l'instant ! Toutes vos cartes sont acquises.");
+                // Fallback to all cards
+                fcCards = currentSet.cards.map((card, originalIndex) => {
+                    return { ...card, originalIndex };
+                });
+                document.getElementById('fc-review-only').checked = false;
+            }
+
+            if (shuffle) {
+                for (let i = fcCards.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [fcCards[i], fcCards[j]] = [fcCards[j], fcCards[i]];
+                }
+            }
+        }
+
+        function toggleFcShuffle() {
+            const activeCard = fcCards[fcIndex];
+            setupFlashcardDeck(
+                document.getElementById('fc-shuffle').checked,
+                document.getElementById('fc-review-only').checked
+            );
+
+            // Re-find state
+            const newIdx = fcCards.findIndex(c => c.originalIndex === activeCard?.originalIndex);
+            fcIndex = newIdx !== -1 ? newIdx : 0;
+            updateFlashcard();
+        }
+
+        function toggleFcReviewOnly() {
+            fcIndex = 0;
+            setupFlashcardDeck(
+                document.getElementById('fc-shuffle').checked,
+                document.getElementById('fc-review-only').checked
+            );
+            updateFlashcard();
+        }
+
+        function setFcLang(lang) {
+            fcLang = lang;
+            document.querySelectorAll('#view-flashcards .lang-option').forEach(el => el.classList.remove('active'));
+            if (lang === 'en') {
+                document.getElementById('fc-lang-en').classList.add('active');
+            } else {
+                document.getElementById('fc-lang-fr').classList.add('active');
+            }
+            updateFlashcard();
+            saveFcPosition();
+        }
+
+        function saveFcPosition() {
+            if (currentSetId) {
+                localStorage.setItem('quizapp_fc_state', JSON.stringify({
+                    setId: currentSetId,
+                    idx: fcIndex,
+                    lang: fcLang
+                }));
+            }
+        }
+
+        function updateFlashcard() {
+            if (fcCards.length === 0) {
+                alert("Vide");
+                return;
+            }
+
+            // Safety check index boundaries
+            if (fcIndex < 0) fcIndex = 0;
+            if (fcIndex >= fcCards.length) {
+                showFlashcardsEndView();
+                return;
+            }
+
+            const card = fcCards[fcIndex];
+            const inner = document.getElementById('fc-inner');
+            inner.classList.remove('flipped');
+
+            // Hide rate keys
+            document.getElementById('fc-rate-controls').classList.add('d-none');
+
+            // Configure text labels based on selected language direction
+            if (fcLang === 'en') {
+                document.getElementById('recto-text').innerText = card.term;
+                document.getElementById('recto-tag').innerText = "Anglais (Terme)";
+                document.getElementById('verso-text').innerText = card.def;
+                document.getElementById('verso-tag').innerText = "Français (Définition)";
+            } else {
+                document.getElementById('recto-text').innerText = card.def;
+                document.getElementById('recto-tag').innerText = "Français (Définition)";
+                document.getElementById('verso-text').innerText = card.term;
+                document.getElementById('verso-tag').innerText = "Anglais (Terme)";
+            }
+
+            // Sync bottom stats 
+            document.getElementById('fc-progress-txt').innerText = `Carte ${fcIndex + 1} / ${fcCards.length}`;
+            const percent = ((fcIndex + 1) / fcCards.length) * 100;
+            document.getElementById('fc-progress-fill').style.width = percent + "%";
+
+            // Count known & unknown 
+            const setProg = progress[currentSetId] || {};
+            let known = 0, review = 0;
+            fcCards.forEach(c => {
+                const s = setProg[c.originalIndex];
+                if (s === 'known') known++;
+                if (s === 'unknown') review++;
+            });
+
+            document.getElementById('fc-known-count').innerText = known;
+            document.getElementById('fc-unknown-count').innerText = review;
+
+            saveFcPosition();
+        }
+
+        function flipCard() {
+            const inner = document.getElementById('fc-inner');
+            inner.classList.toggle('flipped');
+
+            // Toggle score buttons if side is reversed
+            const sideBtn = document.getElementById('fc-rate-controls');
+            if (inner.classList.contains('flipped')) {
+                sideBtn.classList.remove('d-none');
+            } else {
+                sideBtn.classList.add('d-none');
+            }
+        }
+
+        function rateCard(isKnown) {
+            const card = fcCards[fcIndex];
+            if (!progress[currentSetId]) {
+                progress[currentSetId] = {};
+            }
+
+            progress[currentSetId][card.originalIndex] = isKnown ? 'known' : 'unknown';
+            saveProgressToLocalStorage();
+
+            // Auto go to next
+            setTimeout(() => {
+                fcIndex++;
+                updateFlashcard();
+            }, 100);
+        }
+
+        function prevCard() {
+            if (fcIndex > 0) {
+                fcIndex--;
+                updateFlashcard();
+            }
+        }
+
+        function nextCard() {
+            if (fcIndex < fcCards.length - 1) {
+                fcIndex++;
+                updateFlashcard();
+            } else {
+                showFlashcardsEndView();
+            }
+        }
+
+        function showFlashcardsEndView() {
+            const setProg = progress[currentSetId] || {};
+            let known = 0;
+            fcCards.forEach(c => {
+                if (setProg[c.originalIndex] === 'known') known++;
+            });
+
+            const pct = fcCards.length > 0 ? Math.round((known / fcCards.length) * 100) : 0;
+
+            document.getElementById('results-emoji').innerText = "🎉";
+            document.getElementById('results-title').innerText = "Félicitations ! Flashcards terminées.";
+            document.getElementById('results-score-value').innerText = `${pct}%`;
+            document.getElementById('results-subtitle').innerText = `Vous maîtrisez ${known} carte(s) sur ${fcCards.length}.`;
+            
+            document.getElementById('results-errors-box').classList.add('d-none');
+            document.getElementById('results-full-list').innerHTML = "";
+
+            fcCards.forEach(c => {
+                const isKnown = setProg[c.originalIndex] === 'known';
+                const div = document.createElement('div');
+                div.style.padding = "6px 0";
+                div.style.borderBottom = "1px solid #f1f5f9";
+                div.innerHTML = `
+                    <div class="flex justify-between">
+                        <span><strong>${escapeHTML(c.term)}</strong> - ${escapeHTML(c.def)}</span>
+                        <span style="color: ${isKnown ? 'var(--success)' : 'var(--error)'}; font-weight: bold;">
+                            ${isKnown ? '✅ Connu' : '❌ À revoir'}
+                        </span>
+                    </div>
+                `;
+                document.getElementById('results-full-list').appendChild(div);
+            });
+
+            document.getElementById('results-retry-btn').onclick = () => {
+                fcIndex = 0;
+                updateFlashcard();
+                showView('view-flashcards');
+            };
+
+            showView('view-results');
+        }
+
+        // ✏️ QUIZ QCM ENGINE
+        function startQuizMode() {
+            if (!currentSet || currentSet.cards.length === 0) {
+                alert("Ce set est vide.");
+                return;
+            }
+
+            // Prepare cards
+            qCards = currentSet.cards.map((c, idx) => ({ ...c, originalIndex: idx }));
+            // Shuffle
+            for (let i = qCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [qCards[i], qCards[j]] = [qCards[j], qCards[i]];
+            }
+
+            qIndex = 0;
+            qScore = 0;
+            qResults = [];
+
+            renderQLangButtons();
+            generateQuizQuestion();
+            showView('view-quiz');
+        }
+
+        function setQLang(direction) {
+            qLang = direction;
+            renderQLangButtons();
+            generateQuizQuestion();
+        }
+
+        function renderQLangButtons() {
+            document.querySelectorAll('#view-quiz .lang-option').forEach(el => el.classList.remove('active'));
+            if (qLang === 'en_fr') {
+                document.getElementById('q-lang-en').classList.add('active');
+            } else {
+                document.getElementById('q-lang-fr').classList.add('active');
+            }
+        }
+
+        function generateQuizQuestion() {
+            const total = qCards.length;
+            if (qIndex >= total) {
+                showQuizResults();
+                return;
+            }
+
+            document.getElementById('q-counter').innerText = `Question ${qIndex + 1} / ${total}`;
+            
+            // Build visual dots
+            const dots = document.getElementById('q-dots-container');
+            dots.innerHTML = "";
+            for (let i = 0; i < total; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'point-dot';
+                if (i === qIndex) dot.classList.add('current');
+                else if (qResults[i]) {
+                    dot.classList.add(qResults[i].correct ? 'correct' : 'incorrect');
+                }
+                dots.appendChild(dot);
+            }
+
+            const current = qCards[qIndex];
+            const isEnToFr = qLang === 'en_fr';
+            
+            const questionText = isEnToFr ? current.term : current.def;
+            const correctSolution = isEnToFr ? current.def : current.term;
+            
+            document.getElementById('q-question-text').innerText = questionText;
+
+            // Generate alternatives 
+            let optionPool = currentSet.cards.map(c => isEnToFr ? c.def : c.term);
+            optionPool = optionPool.filter(o => o !== correctSolution);
+            
+            // Shuffle and pick 3
+            optionPool.sort(() => Math.random() - 0.5);
+            let chosenAlternatives = optionPool.slice(0, 3);
+            
+            // Insert correct option
+            chosenAlternatives.push(correctSolution);
+            chosenAlternatives.sort(() => Math.random() - 0.5);
+
+            // Print choices buttons
+            const optionsBox = document.getElementById('q-options-container');
+            optionsBox.innerHTML = "";
+
+            chosenAlternatives.forEach(altOption => {
+                const button = document.createElement('button');
+                button.className = 'quiz-option';
+                button.innerText = altOption;
+                button.onclick = () => selectQuizAnswer(button, altOption, correctSolution, current);
+                optionsBox.appendChild(button);
+            });
+        }
+
+        let qAnsweringBlocked = false;
+
+        function selectQuizAnswer(selectedBtn, answer, correctSolution, cardObj) {
+            if (qAnsweringBlocked) return;
+            qAnsweringBlocked = true;
+
+            const isCorrect = (answer === correctSolution);
+            if (isCorrect) {
+                selectedBtn.classList.add('correct');
+                qScore++;
+            } else {
+                selectedBtn.classList.add('incorrect');
+                // Highlight correct button
+                document.querySelectorAll('.quiz-option').forEach(btn => {
+                    if (btn.innerText === correctSolution) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            // Save results 
+            qResults.push({
+                term: isCorrect ? cardObj.term : cardObj.term,
+                correct: isCorrect,
+                selected: answer,
+                correctSolution: correctSolution,
+                cardObj: cardObj
+            });
+
+            // Auto-update stats 
+            if (!progress[currentSetId]) progress[currentSetId] = {};
+            progress[currentSetId][cardObj.originalIndex] = isCorrect ? 'known' : 'unknown';
+            saveProgressToLocalStorage();
+
+            // Next step callback delay (900ms)
+            setTimeout(() => {
+                qIndex++;
+                qAnsweringBlocked = false;
+                generateQuizQuestion();
+            }, 900);
+        }
+
+        function showQuizResults() {
+            const pct = Math.round((qScore / qCards.length) * 100);
+            
+            // Set emoji
+            let emoji = "💪";
+            if (pct === 100) emoji = "🏆";
+            else if (pct >= 80) emoji = "🎉";
+            else if (pct >= 50) emoji = "👍";
+
+            document.getElementById('results-emoji').innerText = emoji;
+            document.getElementById('results-title').innerText = "Résultats du Quiz !";
+            document.getElementById('results-score-value').innerText = `${pct}%`;
+            document.getElementById('results-subtitle').innerText = `${qScore} / ${qCards.length} correctes`;
+
+            // Errors box check
+            const errors = qResults.filter(r => !r.correct);
+            const errBox = document.getElementById('results-errors-box');
+            
+            if (errors.length > 0) {
+                errBox.classList.remove('d-none');
+                const errList = document.getElementById('results-errors-list');
+                errList.innerHTML = "";
+                errBox.querySelector('h3').innerText = `❌ ${errors.length} erreur${errors.length > 1 ? 's' : ''} à revoir :`;
+                errors.forEach(e => {
+                    const row = document.createElement('div');
+                    row.className = 'error-result-item';
+                    row.innerHTML = `
+                        <strong>Traduire : </strong> <span>${escapeHTML(qLang==='en_fr'?e.cardObj.term:e.cardObj.def)}</span> <br>
+                        <span style="color: var(--success);">✅ Bonne réponse : ${escapeHTML(e.correctSolution)}</span> <br>
+                        <span style="color: var(--error);">❌ Saisie sélectionnée : ${escapeHTML(e.selected)}</span>
+                    `;
+                    errList.appendChild(row);
+                });
+            } else {
+                errBox.classList.add('d-none');
+            }
+
+            // Build full history view
+            const fullList = document.getElementById('results-full-list');
+            fullList.innerHTML = "";
+            qResults.forEach(r => {
+                const div = document.createElement('div');
+                div.style.padding = "6px 0";
+                div.style.borderBottom = "1px solid #eef1f6";
+                div.innerHTML = `
+                    <div class="flex justify-between">
+                        <span><strong>${escapeHTML(r.cardObj.term)}</strong> - ${escapeHTML(r.cardObj.def)}</span>
+                        <span style="color: ${r.correct ? 'var(--success)' : 'var(--error)'}; font-weight: bold;">
+                            ${r.correct ? '✅ Bon' : '❌ Faux'}
+                        </span>
+                    </div>
+                `;
+                fullList.appendChild(div);
+            });
+
+            document.getElementById('results-retry-btn').onclick = () => {
+                startQuizMode();
+            };
+
+            showView('view-results');
+        }
+
+        // ⌨️ WRITE (ÉCRIRE) ENGINE
+        function startWriteMode() {
+            if (!currentSet || currentSet.cards.length === 0) {
+                alert("Ce set est vide.");
+                return;
+            }
+
+            wCards = currentSet.cards.map((c, idx) => ({ ...c, originalIndex: idx }));
+            // Shuffle
+            for (let i = wCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [wCards[i], wCards[j]] = [wCards[j], wCards[i]];
+            }
+
+            wIndex = 0;
+            wCorrectCount = 0;
+            wResults = [];
+
+            renderWLangButtons();
+            generateWQuestion();
+            showView('view-write');
+        }
+
+        function setWLang(direction) {
+            wLang = direction;
+            renderWLangButtons();
+            generateWQuestion();
+        }
+
+        function renderWLangButtons() {
+            document.querySelectorAll('#view-write .lang-option').forEach(el => el.classList.remove('active'));
+            if (wLang === 'en_fr') {
+                document.getElementById('w-lang-en').classList.add('active');
+            } else {
+                document.getElementById('w-lang-fr').classList.add('active');
+            }
+        }
+
+        function generateWQuestion() {
+            const total = wCards.length;
+            if (wIndex >= total) {
+                showWriteResults();
+                return;
+            }
+
+            document.getElementById('w-counter').innerText = `Carte ${wIndex + 1} / ${total}`;
+            
+            // Build progress dots
+            const dots = document.getElementById('w-dots-container');
+            dots.innerHTML = "";
+            for (let i = 0; i < total; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'point-dot';
+                if (i === wIndex) dot.classList.add('current');
+                else if (wResults[i]) {
+                    dot.classList.add(wResults[i].correct ? 'correct' : 'incorrect');
+                }
+                dots.appendChild(dot);
+            }
+
+            const current = wCards[wIndex];
+            const wordToTranslate = wLang === 'en_fr' ? current.term : current.def;
+            
+            document.getElementById('w-question-text').innerText = wordToTranslate;
+
+            // Reset input text
+            const inp = document.getElementById('w-input');
+            inp.value = "";
+            inp.disabled = false;
+            inp.focus();
+
+            // Toggle btns status
+            document.getElementById('w-submit-btn').classList.remove('d-none');
+            document.getElementById('w-next-btn').classList.add('d-none');
+            document.getElementById('w-feedback-box').classList.add('d-none');
+        }
+
+        function handleWKeydown(event) {
+            if (event.key === 'Enter') {
+                const isBlocked = document.getElementById('w-submit-btn').classList.contains('d-none');
+                if (!isBlocked) {
+                    submitWAnswer();
+                } else {
+                    nextWQuestion();
+                }
+            }
+        }
+
+        function submitWAnswer() {
+            const inp = document.getElementById('w-input');
+            const userText = inp.value.trim();
+            if (!userText) {
+                alert("Svp tapez une réponse.");
+                return;
+            }
+
+            inp.disabled = true;
+
+            const current = wCards[wIndex];
+            const answerExpected = wLang === 'en_fr' ? current.def : current.term;
+
+            // Check similarities percentage
+            const scoreSim = calculateSimilarity(userText, answerExpected);
+            const isCorrect = (scoreSim >= 0.85);
+
+            if (isCorrect) {
+                wCorrectCount++;
+            }
+
+            // Track state history
+            wResults.push({
+                term: current.term,
+                correct: isCorrect,
+                userText: userText,
+                answerExpected: answerExpected,
+                cardObj: current,
+                similarity: scoreSim
+            });
+
+            // Update Progress on actual set card
+            if (!progress[currentSetId]) progress[currentSetId] = {};
+            progress[currentSetId][current.originalIndex] = isCorrect ? 'known' : 'unknown';
+            saveProgressToLocalStorage();
+
+            // Visual layout update feedback
+            document.getElementById('w-submit-btn').classList.add('d-none');
+            document.getElementById('w-next-btn').classList.remove('d-none');
+
+            const fBox = document.getElementById('w-feedback-box');
+            fBox.classList.remove('d-none');
+
+            const fTitle = document.getElementById('w-feedback-title');
+            if (isCorrect) {
+                fTitle.innerText = "Excellent ! Correct " + (scoreSim < 1.0 ? `(${Math.round(scoreSim*100)}% de similarité)` : "");
+                fTitle.className = "write-feedback correct";
+                document.getElementById('w-user-box').classList.add('d-none');
+                document.getElementById('w-override-btn').classList.add('d-none');
+            } else {
+                fTitle.innerText = "Incorrect";
+                fTitle.className = "write-feedback incorrect";
+                
+                document.getElementById('w-user-box').classList.remove('d-none');
+                document.getElementById('w-user-input-text').innerText = userText;
+                document.getElementById('w-override-btn').classList.remove('d-none');
+            }
+
+            document.getElementById('w-expected').innerText = answerExpected;
+        }
+
+        // Action when user clicks "J'avais juste" Overrides state
+        function overrideWAnswer() {
+            const currentResult = wResults[wIndex];
+            if (currentResult && !currentResult.correct) {
+                currentResult.correct = true;
+                wCorrectCount++;
+
+                // Sync status colors
+                const current = wCards[wIndex];
+                progress[currentSetId][current.originalIndex] = 'known';
+                saveProgressToLocalStorage();
+
+                // Re-render feedback panels 
+                const fTitle = document.getElementById('w-feedback-title');
+                fTitle.innerText = "Accepté manuellement comme correct !";
+                fTitle.className = "write-feedback correct";
+                
+                document.getElementById('w-user-box').classList.add('d-none');
+                document.getElementById('w-override-btn').classList.add('d-none');
+            }
+        }
+
+        function nextWQuestion() {
+            wIndex++;
+            generateWQuestion();
+        }
+
+        function showWriteResults() {
+            const pct = Math.round((wCorrectCount / wCards.length) * 100);
+            let emoji = "💪";
+            if (pct === 100) emoji = "🏆";
+            else if (pct >= 80) emoji = "🎉";
+            else if (pct >= 50) emoji = "👍";
+
+            document.getElementById('results-emoji').innerText = emoji;
+            document.getElementById('results-title').innerText = "Exercice Écrire terminé !";
+            document.getElementById('results-score-value').innerText = `${pct}%`;
+            document.getElementById('results-subtitle').innerText = `${wCorrectCount} / ${wCards.length} correctes`;
+
+            const errors = wResults.filter(r => !r.correct);
+            const errBox = document.getElementById('results-errors-box');
+            
+            if (errors.length > 0) {
+                errBox.classList.remove('d-none');
+                const errList = document.getElementById('results-errors-list');
+                errList.innerHTML = "";
+                errBox.querySelector('h3').innerText = `❌ ${errors.length} erreur${errors.length > 1 ? 's' : ''} à revoir :`;
+                errors.forEach(e => {
+                    const row = document.createElement('div');
+                    row.className = 'error-result-item';
+                    row.innerHTML = `
+                        <strong>Traduire: </strong> <span>${escapeHTML(wLang==='en_fr'?e.cardObj.term:e.cardObj.def)}</span> <br>
+                        <span style="color: var(--success);">✅ Attendu : ${escapeHTML(e.answerExpected)}</span> <br>
+                        <span style="color: var(--error);">❌ Saisi : ${escapeHTML(e.userText)}</span>
+                    `;
+                    errList.appendChild(row);
+                });
+            } else {
+                errBox.classList.add('d-none');
+            }
+
+            const fullList = document.getElementById('results-full-list');
+            fullList.innerHTML = "";
+            wResults.forEach(r => {
+                const div = document.createElement('div');
+                div.style.padding = "6px 0";
+                div.style.borderBottom = "1px solid #eef1f6";
+                div.innerHTML = `
+                    <div class="flex justify-between">
+                        <span><strong>${escapeHTML(r.cardObj.term)}</strong> - ${escapeHTML(r.cardObj.def)}</span>
+                        <span style="color: ${r.correct ? 'var(--success)' : 'var(--error)'}; font-weight: bold;">
+                            ${r.correct ? '✅ Bon' : '❌ Faux'}
+                        </span>
+                    </div>
+                `;
+                fullList.appendChild(div);
+            });
+
+            document.getElementById('results-retry-btn').onclick = () => {
+                startWriteMode();
+            };
+
+            showView('view-results');
+        }
+
+        // Similarity engine calculation algorithms
+        function levenshteinDistance(a, b) {
+            const tmp = [];
+            let i, j, alen = a.length, blen = b.length;
+            if (alen === 0) return blen;
+            if (blen === 0) return alen;
+            for (i = 0; i <= alen; i++) tmp[i] = [i];
+            for (j = 0; j <= blen; j++) tmp[0][j] = j;
+            for (i = 1; i <= alen; i++) {
+                for (j = 1; j <= blen; j++) {
+                    tmp[i][j] = Math.min(
+                        tmp[i - 1][j] + 1,
+                        tmp[i][j - 1] + 1,
+                        tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+                    );
+                }
+            }
+            return tmp[alen][blen];
+        }
+
+        function calculateSimilarity(str1, str2) {
+            let s1 = str1.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            let s2 = str2.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            // Format standard clean verbal structures "to walk" matches "walk"
+            s1 = s1.replace(/^to\s+/, "");
+            s2 = s2.replace(/^to\s+/, "");
+
+            // Ignore punctuation marks and specific accents
+            s1 = s1.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"");
+            s2 = s2.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"");
+
+            if (s1 === s2) return 1.0;
+            const maxLen = Math.max(s1.length, s2.length);
+            if (maxLen === 0) return 1.0;
+            const dist = levenshteinDistance(s1, s2);
+            return (maxLen - dist) / maxLen;
+        }
+
+        // 🧩 CRITICAL 4: MOTS CROISÉS (CROSSWORD) ENGINE
+        function setCwLang(direction) {
+            cwLang = direction;
+            document.querySelectorAll('#view-crossword .lang-option').forEach(el => el.classList.remove('active'));
+            if (direction === 'en_fr') {
+                document.getElementById('cw-lang-en').classList.add('active');
+            } else {
+                document.getElementById('cw-lang-fr').classList.add('active');
+            }
+            startCrossword(true);
+        }
+
+        async function startCrosswordMode() {
+            if (!currentSet || currentSet.cards.length === 0) {
+                alert("Ce set est vide.");
+                return;
+            }
+            showView('view-crossword');
+            setCwLang(cwLang); // Trigger load
+        }
+
+        // START CROSSWORD (MUST BE ASYNC BUT EXCLUSIVELY LOCAL)
+        async function startCrossword(regenerate = true) {
+            document.getElementById('cw-game-area').classList.add('d-none');
+            const feedbackText = document.getElementById('cw-generator-feedback');
+            feedbackText.classList.remove('d-none');
+            feedbackText.innerText = "Génération de la grille locale en cours...";
+
+            // Small delay to let browser reflow beautifully
+            await new Promise(r => setTimeout(r, 200));
+
+            const generationConfig = generateCrosswordLayout();
+            if (!generationConfig || generationConfig.placed.length === 0) {
+                feedbackText.innerText = "⚠️ Impossible de générer la grille de puzzle avec ces mots. Veuillez ajouter plus de termes différents.";
+                return;
+            }
+
+            feedbackText.classList.add('d-none');
+            
+            // Set state variables
+            cwGrid = generationConfig.grid;
+            cwPlacements = generationConfig.placed;
+            cwGridSize = generationConfig.gridSize;
+
+            renderCrosswordPuzzle(generationConfig);
+            document.getElementById('cw-game-area').classList.remove('d-none');
+        }
+
+        function generateCrosswordLayout() {
+            // Words clean up list 
+            let items = currentSet.cards.map((c, idx) => {
+                let showClue = cwLang === "en_fr" ? c.def : c.term; 
+                let cleanAns = cwLang === "en_fr" ? c.term : c.def;   
+                
+                let normalized = cleanAns.toUpperCase().trim()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+                    .replace(/[^A-Z]/g, ""); // keep strictly alphabetic (strip spaces/punc from crossword grid)
+                
+                return {
+                    originalIndex: idx,
+                    term: c.term,
+                    def: c.def,
+                    clue: showClue,
+                    answer: cleanAns,
+                    clean: normalized
+                };
+            }).filter(item => item.clean.length >= 2); // Minimum length of 2
+
+            if (items.length === 0) return null;
+
+            // Sort words longest first to establish scaffolding anchor
+            items.sort((a,b) => b.clean.length - a.clean.length);
+            // Slice to 10 maximum words for mobile screen constraints
+            items = items.slice(0, 10);
+
+            const size = 12; // Compact 12x12 grid is ideal for smartphone devices
+            let grid = Array(size).fill(null).map(() => Array(size).fill(''));
+            let placed = [];
+
+            // Place first word horizontally in center
+            let first = items[0];
+            let centerRow = Math.floor(size / 2);
+            let centerCol = Math.max(0, Math.floor((size - first.clean.length) / 2));
+
+            for (let c = 0; c < first.clean.length; c++) {
+                grid[centerRow][centerCol + c] = first.clean[c];
+            }
+
+            placed.push({
+                item: first,
+                x: centerCol,
+                y: centerRow,
+                dir: 'H',
+                len: first.clean.length
+            });
+
+            // Try placing each subsequent items. Attempt to find intersecting tile letters
+            for (let mIdx = 1; mIdx < items.length; mIdx++) {
+                let currentItem = items[mIdx];
+                let placementOptions = [];
+
+                for (let p of placed) {
+                    for (let pCellIdx = 0; pCellIdx < p.len; pCellIdx++) {
+                        let pChar = p.item.clean[pCellIdx];
+                        let px = p.dir === 'H' ? p.x + pCellIdx : p.x;
+                        let py = p.dir === 'H' ? p.y : p.y + pCellIdx;
+
+                        for (let cCellIdx = 0; cCellIdx < currentItem.clean.length; cCellIdx++) {
+                            let cChar = currentItem.clean[cCellIdx];
+                            if (pChar === cChar) {
+                                // Match intersection configuration
+                                let targetDir = p.dir === 'H' ? 'V' : 'H';
+                                let targetX = targetDir === 'H' ? px - cCellIdx : px;
+                                let targetY = targetDir === 'V' ? py - cCellIdx : py;
+
+                                if (verifyWordLayoutFit(grid, size, currentItem.clean, targetX, targetY, targetDir, px, py)) {
+                                    placementOptions.push({
+                                        x: targetX,
+                                        y: targetY,
+                                        dir: targetDir,
+                                        score: 10 // intersection score base
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (placementOptions.length > 0) {
+                    // Pick option with maximum score (or just first)
+                    let best = placementOptions[0];
+                    for (let opt of placementOptions) {
+                        if (opt.score > best.score) best = opt;
+                    }
+
+                    // Write grid
+                    for (let charIdx = 0; charIdx < currentItem.clean.length; charIdx++) {
+                        let rx = best.dir === 'H' ? best.x + charIdx : best.x;
+                        let ry = best.dir === 'V' ? best.y + charIdx : best.y;
+                        grid[ry][rx] = currentItem.clean[charIdx];
+                    }
+
+                    placed.push({
+                        item: currentItem,
+                        x: best.x,
+                        y: best.y,
+                        dir: best.dir,
+                        len: currentItem.clean.length
+                    });
+                }
+            }
+
+            return { grid, placed, gridSize: size };
+        }
+
+        function verifyWordLayoutFit(grid, size, wordClean, startX, startY, dir, intX, intY) {
+            // Out of bounds check
+            if (dir === 'H') {
+                if (startX < 0 || startX + wordClean.length > size || startY < 0 || startY >= size) return false;
+            } else {
+                if (startX < 0 || startX >= size || startY < 0 || startY + wordClean.length > size) return false;
+            }
+
+            // Inspect cells along placement
+            for (let i = 0; i < wordClean.length; i++) {
+                let currentCheckX = dir === 'H' ? startX + i : startX;
+                let currentCheckY = dir === 'V' ? startY + i : startY;
+
+                // Intersection skip
+                if (currentCheckX === intX && currentCheckY === intY) continue;
+
+                let existing = grid[currentCheckY][currentCheckX];
+                if (existing !== '' && existing !== wordClean[i]) {
+                    return false; // Letters conflict
+                }
+
+                // Check orthoganal neighbors to prevent word merging side-by-side
+                if (existing === '') {
+                    if (dir === 'H') {
+                        if (currentCheckY > 0 && grid[currentCheckY - 1][currentCheckX] !== '') return false;
+                        if (currentCheckY < size - 1 && grid[currentCheckY + 1][currentCheckX] !== '') return false;
+                    } else {
+                        if (currentCheckX > 0 && grid[currentCheckY][currentCheckX - 1] !== '') return false;
+                        if (currentCheckX < size - 1 && grid[currentCheckY][currentCheckX + 1] !== '') return false;
+                    }
+                }
+            }
+
+            // Endpoint gap margin check
+            if (dir === 'H') {
+                if (startX > 0 && grid[startY][startX - 1] !== '') return false;
+                if (startX + wordClean.length < size && grid[startY][startX + wordClean.length] !== '') return false;
+            } else {
+                if (startY > 0 && grid[startY - 1][startX] !== '') return false;
+                if (startY + wordClean.length < size && grid[startY + wordClean.length][startX] !== '') return false;
+            }
+
+            return true;
+        }
+
+        function renderCrosswordPuzzle(cfg) {
+            const container = document.getElementById('cw-grid-container');
+            container.innerHTML = "";
+            container.style.gridTemplateColumns = `repeat(${cfg.gridSize}, minmax(0, 1fr))`;
+
+            // Assign numbers to grid starts based on coordinate index sorting H then V
+            let cellNumList = Array(cfg.gridSize).fill(null).map(() => Array(cfg.gridSize).fill(0));
+            let numSequence = 1;
+
+            let sortedPlacements = [...cfg.placed].sort((a,b) => {
+                if (a.y !== b.y) return a.y - b.y;
+                return a.x - b.x;
+            });
+
+            sortedPlacements.forEach(p => {
+                if (cellNumList[p.y][p.x] === 0) {
+                    cellNumList[p.y][p.x] = numSequence;
+                    numSequence++;
+                }
+                p.numIndex = cellNumList[p.y][p.x];
+            });
+
+            // Draw boxes
+            for (let r = 0; r < cfg.gridSize; r++) {
+                for (let c = 0; c < cfg.gridSize; c++) {
+                    const cellVal = cfg.grid[r][c];
+                    const box = document.createElement('div');
+                    box.style.position = 'relative';
+
+                    if (cellVal !== '') {
+                        const cellNum = cellNumList[r][c];
+                        const labelNum = cellNum > 0 ? `<span class="cw-cell-number">${cellNum}</span>` : "";
+
+                        box.innerHTML = `
+                            ${labelNum}
+                            <input type="text" class="cw-cell playable" 
+                                   id="cw-c-${r}-${c}" 
+                                   maxLength="1" 
+                                   data-correct="${cellVal}" 
+                                   onkeyup="handleCwCellType(event, ${r}, ${c})"
+                                   onclick="focusCwCell(${r}, ${c})">
+                        `;
+                    } else {
+                        box.innerHTML = `<div class="cw-cell" style="background:#2e3856;"></div>`;
+                    }
+                    container.appendChild(box);
+                }
+            }
+
+            // Print Clues Columns
+            const acrossContainer = document.getElementById('cw-clues-across');
+            const downContainer = document.getElementById('cw-clues-down');
+            acrossContainer.innerHTML = "";
+            downContainer.innerHTML = "";
+
+            // Render ordered list items
+            sortedPlacements.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'cw-clue-item';
+                item.id = `cw-clue-${p.numIndex}-${p.dir}`;
+                item.innerHTML = `<strong>${p.numIndex}.</strong> ${escapeHTML(p.item.clue)} <span style="font-size:11px; color:var(--muted)">(${p.len} let.)</span>`;
+                item.onclick = () => focusCwPlacement(p);
+
+                if (p.dir === 'H') {
+                    acrossContainer.appendChild(item);
+                } else {
+                    downContainer.appendChild(item);
+                }
+            });
+        }
+
+        function handleCwCellType(event, r, c) {
+            const allowed = /^[a-zA-Z]$/;
+            const input = document.getElementById(`cw-c-${r}-${c}`);
+            
+            // Clean up lowercase
+            input.value = input.value.toUpperCase();
+
+            if (event.key === 'Backspace' || event.key === 'Delete') {
+                // Return back
+                moveCwSelection(r, c, -1);
+                return;
+            }
+
+            if (allowed.test(input.value)) {
+                moveCwSelection(r, c, 1);
+            }
+        }
+
+        function moveCwSelection(r, c, delta) {
+            let tr = r, tc = c;
+            if (cwActiveDir === 'H') {
+                tc += delta;
+            } else {
+                tr += delta;
+            }
+
+            const nextInp = document.getElementById(`cw-c-${tr}-${tc}`);
+            if (nextInp) nextInp.focus();
+        }
+
+        function focusCwCell(r, c) {
+            cwSelectedRow = r;
+            cwSelectedCol = c;
+            
+            // Look if it's horizontal or vertical
+            const right = document.getElementById(`cw-c-${r}-${c+1}`);
+            const left = document.getElementById(`cw-c-${r}-${c-1}`);
+            const down = document.getElementById(`cw-c-${r+1}-${c}`);
+            const up = document.getElementById(`cw-c-${r-1}-${c}`);
+
+            // Toggle active arrow direction automatically
+            if (cwActiveDir === 'H' && !right && !left && (down || up)) {
+                cwActiveDir = 'V';
+            } else if (cwActiveDir === 'V' && !down && !up && (right || left)) {
+                cwActiveDir = 'H';
+            }
+            highlightClueItem(r, c);
+        }
+
+        function highlightClueItem(r, c) {
+            // Find placement corresponding to r, c and cwActiveDir
+            let p = cwPlacements.find(item => {
+                if (item.dir !== cwActiveDir) return false;
+                if (item.dir === 'H') {
+                    return r === item.y && c >= item.x && c < item.x + item.len;
+                } else {
+                    return c === item.x && r >= item.y && r < item.y + item.len;
+                }
+            });
+
+            // Slide match to opposite direction 
+            if (!p) {
+                p = cwPlacements.find(item => {
+                    if (item.dir === 'H') {
+                        return r === item.y && c >= item.x && c < item.x + item.len;
+                    } else {
+                        return c === item.x && r >= item.y && r < item.y + item.len;
+                    }
+                });
+            }
+
+            if (p) {
+                document.querySelectorAll('.cw-clue-item').forEach(el => el.style.background = "none");
+                const itemEl = document.getElementById(`cw-clue-${p.numIndex}-${p.dir}`);
+                if (itemEl) {
+                    itemEl.style.background = "#edf2ff";
+                    itemEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }
+
+        function focusCwPlacement(placement) {
+            cwActiveDir = placement.dir;
+            const rootInp = document.getElementById(`cw-c-${placement.y}-${placement.x}`);
+            if (rootInp) rootInp.focus();
+        }
+
+        function checkCrossword() {
+            let totalCells = 0;
+            let correctCells = 0;
+
+            document.querySelectorAll('.cw-cell.playable').forEach(inp => {
+                const correct = inp.getAttribute('data-correct');
+                const value = inp.value.toUpperCase().trim();
+                totalCells++;
+
+                inp.classList.remove('correct', 'incorrect');
+                if (correct === value) {
+                    inp.classList.add('correct');
+                    correctCells++;
+                } else if (value !== '') {
+                    inp.classList.add('incorrect');
+                }
+            });
+
+            // Crossword evaluation
+            const completeMatchPercentage = Math.round((correctCells / totalCells)*100);
+            if (completeMatchPercentage === 100) {
+                alert("✨ Exceptionnel ! Vous avez complété et réussi la grille à 100% !");
+            } else {
+                alert(`Grille vérifiée : ${correctCells} lettres correctes sur ${totalCells} (${completeMatchPercentage}% de réussite).`);
+            }
+        }
+
+        function revealCrossword() {
+            if (confirm("Voulez-vous révéler la solution de la grille ?")) {
+                document.querySelectorAll('.cw-cell.playable').forEach(inp => {
+                    const correctVal = inp.getAttribute('data-correct');
+                    inp.value = correctVal;
+                    inp.classList.add('correct');
+                    inp.disabled = true;
+                });
+            }
+        }
+
+        // TOOL HELPER ESCAPER
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
